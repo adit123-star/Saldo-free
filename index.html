@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #040208 0%, #0c051f 50%, #010003 100%);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+        }
+        .glass-nav {
+            background: rgba(8, 4, 18, 0.85);
+            backdrop-filter: blur(14px);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .bottom-sheet {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bottom-sheet.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="text-slate-200 antialiased">
+
+    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
+        
+        <div id="card-register" class="glass-card w-full max-w-md rounded-3xl p-6 space-y-4">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-gradient-to-tr from-purple-600 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-purple-500/30 mb-2">
+                    <i class="fas fa-user-plus text-xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-black tracking-tight text-white">Daftar Akun</h2>
+                <p class="text-xs text-slate-400">Gabung gratis untuk mengumpulkan saldo kuis</p>
+            </div>
+
+            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Username</label>
+                    <input type="text" id="reg-username" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-purple-500 text-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Email</label>
+                    <input type="email" id="reg-email" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-purple-500 text-white transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Password 1</label>
+                        <input type="password" id="reg-pass1" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-purple-500 text-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-400 mb-1">Password 2</label>
+                        <input type="password" id="reg-pass2" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-purple-500 text-white transition-all">
+                    </div>
+                </div>
+
+                <div class="bg-purple-950/30 border border-purple-500/20 rounded-xl p-3 space-y-2">
+                    <p class="text-[10px] font-bold text-purple-400"><i class="fas fa-shield-alt mr-1"></i> Proteksi Anti-Bot Matematika:</p>
+                    <div class="flex items-center gap-3">
+                        <span id="reg-captcha-text" class="text-sm font-black text-white bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">0 + 0</span>
+                        <input type="number" id="reg-captcha-ans" placeholder="?" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-1.5 px-3 text-sm text-center focus:outline-none focus:border-purple-500 text-white">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl cursor-pointer text-sm">
+                    Click untuk Daftarkan <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </form>
+            <p class="text-xs text-center text-slate-400">Sudah punya akun? <button onclick="toggleAuth(false)" class="text-purple-400 font-bold underline">Login disini</button></p>
+        </div>
+
+        <div id="card-login" class="glass-card w-full max-w-md rounded-3xl p-6 space-y-4 hidden">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30 mb-2">
+                    <i class="fas fa-sign-in-alt text-xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-black tracking-tight text-white">Masuk Aplikasi</h2>
+                <p class="text-xs text-slate-400">Masukkan akun Email atau Username Anda</p>
+            </div>
+
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Email atau Username</label>
+                    <input type="text" id="login-user" required placeholder="User / Email..." class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-emerald-500 text-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Password</label>
+                    <input type="password" id="login-pass" required placeholder="••••••••" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-emerald-500 text-white transition-all">
+                </div>
+
+                <div class="bg-emerald-950/30 border border-emerald-500/20 rounded-xl p-3 space-y-2">
+                    <p class="text-[10px] font-bold text-emerald-400"><i class="fas fa-shield-alt mr-1"></i> Proteksi Anti-Bot Matematika:</p>
+                    <div class="flex items-center gap-3">
+                        <span id="login-captcha-text" class="text-sm font-black text-white bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">0 × 0</span>
+                        <input type="number" id="login-captcha-ans" placeholder="?" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl py-1.5 px-3 text-sm text-center focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-3 rounded-xl cursor-pointer text-sm">
+                    Masuk Sekarang <i class="fas fa-door-open ml-1"></i>
+                </button>
+            </form>
+            <p class="text-xs text-center text-slate-400">Belum terdaftar? <button onclick="toggleAuth(true)" class="text-emerald-400 font-bold underline">Buat akun baru</button></p>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="hidden min-h-screen pb-24">
+        
+        <header class="p-4 sticky top-0 z-40 glass-nav shadow-md mb-5">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                        <i class="fas fa-user text-xs text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-slate-500 leading-none">User Account</p>
+                        <p class="text-xs font-bold text-purple-400 truncate max-w-[110px]" id="user-display-name">Guest</p>
+                    </div>
+                </div>
+                <div class="bg-slate-950/80 px-3 py-1.5 rounded-xl border border-emerald-500/20 flex items-center gap-2">
+                    <i class="fas fa-wallet text-emerald-400 text-xs"></i>
+                    <div>
+                        <p class="text-[8px] text-slate-500 leading-none">SALDO</p>
+                        <p class="text-sm font-black text-emerald-400" id="display-saldo">Rp 0</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-md mx-auto px-4">
+            
+            <section id="pane-home" class="menu-pane space-y-4">
+                <div class="flex justify-between items-center bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2 text-xs">
+                    <span class="text-slate-400"><i class="fas fa-fire mr-1 text-amber-500"></i>Limit Sesi Hari Ini:</span>
+                    <span class="font-black text-amber-400" id="limit-count-text">0 / 6 Kali</span>
+                </div>
+
+                <div id="quiz-box-wrapper" class="space-y-4">
+                    <div class="glass-card rounded-3xl p-5 text-center relative overflow-hidden">
+                        <span id="game-level-tag" class="px-2.5 py-1 rounded-full text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/20">
+                            Level 1: Saldo Pertama (Mudah)
+                        </span>
+                        <h2 class="text-3xl font-black mt-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400" id="math-question">0 + 0 = ?</h2>
+                        <p class="text-xs text-slate-400 mt-1" id="reward-info">Hadiah: Rp 1,000</p>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-5 space-y-3">
+                        <input type="number" id="answer-input" placeholder="Masukkan jawaban..." class="w-full bg-slate-950/40 border border-slate-800 rounded-xl py-3 text-center text-lg font-bold focus:outline-none focus:border-purple-500 text-white">
+                        <button onclick="checkAnswer()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded-xl cursor-pointer text-xs uppercase tracking-wider">Kirim Jawaban</button>
+                    </div>
+                </div>
+
+                <div id="quiz-locked-box" class="hidden glass-card rounded-3xl p-6 text-center space-y-2 border border-rose-500/20">
+                    <i class="fas fa-lock text-rose-400 text-3xl animate-bounce"></i>
+                    <h3 class="text-base font-bold text-white">Akses Kuis Terkunci!</h3>
+                    <p class="text-xs text-slate-400">Kamu telah mencapai batas maksimal bermain (6 kali). Kuis akan terbuka kembali secara otomatis tepat pada jam <span class="text-rose-400 font-bold">00.00 malam</span>.</p>
+                </div>
+
+                <div id="feedback-box" class="hidden rounded-xl p-3.5 text-center text-xs font-bold"></div>
+            </section>
+
+            <section id="pane-history" class="menu-pane hidden space-y-3">
+                <div class="flex items-center gap-2 mb-1"><i class="fas fa-clock text-purple-400"></i><h3 class="text-sm font-bold">Riwayat Penarikan</h3></div>
+                <div class="glass-card rounded-3xl p-4 min-h-[220px] flex flex-col gap-2.5" id="history-list">
+                    <div class="text-center text-slate-600 my-auto text-xs"><i class="fas fa-history text-2xl mb-1.5 block"></i>Belum ada data penarikan.</div>
+                </div>
+            </section>
+
+            <section id="pane-wd" class="menu-pane hidden space-y-4">
+                <div class="flex items-center gap-2 mb-1"><i class="fas fa-money-bill-wave text-emerald-400"></i><h3 class="text-sm font-bold">Penarikan Dana</h3></div>
+                
+                <div class="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 text-[11px] text-amber-300 space-y-0.5">
+                    <p class="font-bold text-amber-400">Ketentuan:</p>
+                    <p>• Minimal penarikan saldo sebesar <b>Rp 5,000</b>.</p>
+                    <p>• Biaya admin <b>Rp 1,000</b> langsung dipotong pas dari nilai penarikan.</p>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 space-y-3.5">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1.5">Pilih E-Wallet</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="selectWallet('DANA')" class="wallet-btn border border-slate-800 bg-slate-950/40 py-2 rounded-lg font-bold text-xs cursor-pointer">DANA</button>
+                            <button onclick="selectWallet('OVO')" class="wallet-btn border border-slate-800 bg-slate-950/40 py-2 rounded-lg font-bold text-xs cursor-pointer">OVO</button>
+                            <button onclick="selectWallet('GOPAY')" class="wallet-btn border border-slate-800 bg-slate-950/40 py-2 rounded-lg font-bold text-xs cursor-pointer">GOPAY</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Nomor Akun HP</label>
+                        <input type="text" id="wd-number" placeholder="08xxxxxxxxxx" class="w-full bg-slate-950/50 border border-slate-800 rounded-lg py-2 px-3 text-xs focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Nominal Tarik (Rp)</label>
+                        <input type="number" id="wd-amount" value="5000" min="5000" class="w-full bg-slate-950/50 border border-slate-800 rounded-lg py-2 px-3 text-sm font-bold focus:outline-none focus:border-emerald-500 text-white">
+                        <div class="flex justify-between items-center mt-1.5 text-[10px] text-slate-500">
+                            <span>Potongan Admin: <b class="text-rose-400">Rp 1,000</b></span>
+                            <span>Cair Bersih: <b class="text-emerald-400" id="wd-net-amount">Rp 4,000</b></span>
+                        </div>
+                    </div>
+                    <button onclick="processWithdraw()" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl cursor-pointer text-xs uppercase tracking-wider">Kirim Withdraw</button>
+                </div>
+            </section>
+
+            <section id="pane-settings" class="menu-pane hidden space-y-4">
+                <div class="flex items-center gap-2 mb-1"><i class="fas fa-cog text-slate-400"></i><h3 class="text-sm font-bold">Pengaturan Sosial</h3></div>
+                
+                <div class="glass-card rounded-3xl p-4 flex flex-col gap-2.5">
+                    <a href="https://t.me/username" target="_blank" class="flex items-center justify-between p-3 rounded-xl bg-sky-500/5 border border-sky-500/10 hover:bg-sky-500/10 group">
+                        <div class="flex items-center gap-3"><i class="fab fa-telegram text-sky-400 text-lg"></i><span class="font-semibold text-xs">Telegram Channel</span></div>
+                        <i class="fas fa-chevron-right text-[10px] text-slate-600 group-hover:translate-x-0.5 transition-transform"></i>
+                    </a>
+                    <a href="https://tiktok.com/@username" target="_blank" class="flex items-center justify-between p-3 rounded-xl bg-pink-500/5 border border-pink-500/10 hover:bg-pink-500/10 group">
+                        <div class="flex items-center gap-3"><i class="fab fa-tiktok text-pink-400 text-lg"></i><span class="font-semibold text-xs">TikTok Feed</span></div>
+                        <i class="fas fa-chevron-right text-[10px] text-slate-600 group-hover:translate-x-0.5 transition-transform"></i>
+                    </a>
+                    <a href="https://youtube.com/@username" target="_blank" class="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 group">
+                        <div class="flex items-center gap-3"><i class="fab fa-youtube text-red-400 text-lg"></i><span class="font-semibold text-xs">YouTube Video</span></div>
+                        <i class="fas fa-chevron-right text-[10px] text-slate-600 group-hover:translate-x-0.5 transition-transform"></i>
+                    </a>
+                </div>
+
+                <button onclick="triggerLogout()" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold py-2.5 rounded-xl cursor-pointer text-xs">
+                    <i class="fas fa-power-off mr-1"></i> Log Out / Keluar Akun
+                </button>
+            </section>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 glass-nav py-2 px-6 z-40">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <button onclick="switchTab('home', this)" class="nav-btn flex flex-col items-center text-purple-400 font-bold cursor-pointer">
+                    <i class="fas fa-brain text-base"></i><span class="text-[9px] mt-0.5">Kuis</span>
+                </button>
+                <button onclick="switchTab('history', this)" class="nav-btn flex flex-col items-center text-slate-500 cursor-pointer">
+                    <i class="fas fa-clock text-base"></i><span class="text-[9px] mt-0.5">Riwayat</span>
+                </button>
+                <button onclick="switchTab('wd', this)" class="nav-btn flex flex-col items-center text-slate-500 cursor-pointer">
+                    <i class="fas fa-money-bill-wave text-base"></i><span class="text-[9px] mt-0.5">Tarik</span>
+                </button>
+                <button onclick="switchTab('settings', this)" class="nav-btn flex flex-col items-center text-slate-500 cursor-pointer">
+                    <i class="fas fa-cog text-base"></i><span class="text-[9px] mt-0.5">Setting</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <div id="bottom-sheet-backdrop" class="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-end justify-center">
+        <div id="bottom-sheet-content" class="bottom-sheet w-full max-w-md bg-[#0b071a] border-t border-slate-800 rounded-t-3xl p-6 space-y-4">
+            <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-1"></div>
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto text-amber-400 mb-2">
+                    <i class="fas fa-key text-lg"></i>
+                </div>
+                <h4 class="text-base font-black text-white" id="sheet-title">Simpan Akun Anda?</h4>
+                <p class="text-xs text-slate-400" id="sheet-desc">Simpan sandi di browser untuk masuk otomatis.</p>
+            </div>
+            <div id="sheet-action-box" class="space-y-2 pt-2"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, update, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://GANTI-NAMA-PROJECT-KAMU-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUid = localStorage.getItem('logged_uid') || null;
+        let userData = null;
+        let autoSaveCredentials = localStorage.getItem('saved_credentials') || null;
+
+        let currentAnswer = 0;
+        let selectedWalletMethod = "";
+        let currentRegCaptcha = 0, currentLoginCaptcha = 0;
+        let hasShownAlertThisSession = false; 
+
+        // DOM elements
+        const displaySaldo = document.getElementById('display-saldo');
+        const mathQuestion = document.getElementById('math-question');
+        const rewardInfo = document.getElementById('reward-info');
+        const gameLevelTag = document.getElementById('game-level-tag');
+        const answerInput = document.getElementById('answer-input');
+        const feedbackBox = document.getElementById('feedback-box');
+        const historyList = document.getElementById('history-list');
+        const wdAmountInput = document.getElementById('wd-amount');
+        const wdNetAmount = document.getElementById('wd-net-amount');
+        const sheetBackdrop = document.getElementById('bottom-sheet-backdrop');
+        const sheetContent = document.getElementById('bottom-sheet-content');
+
+        window.onload = function() {
+            generateCaptcha('reg');
+            generateCaptcha('login');
+            
+            if (currentUid) {
+                listenToUserData(currentUid);
+            } else {
+                checkSavedCredentialsPopup();
+            }
+        };
+
+        function listenToUserData(uid) {
+            const userRef = ref(db, 'users/' + uid);
+            onValue(userRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    localStorage.removeItem('logged_uid');
+                    location.reload();
+                    return;
+                }
+                userData = data;
+                checkResetLimitDay();
+                enterDashboard();
+            });
+        }
+
+        function checkResetLimitDay() {
+            let todayStr = new Date().toDateString();
+            if (userData.lastQuizDate !== todayStr) {
+                userData.quizCount = 0;
+                userData.lastQuizDate = todayStr;
+                update(ref(db, 'users/' + currentUid), { quizCount: 0, lastQuizDate: todayStr });
+            }
+            document.getElementById('limit-count-text').innerText = `${userData.quizCount} / 6 Kali`;
+            updateQuizLockVisibility();
+        }
+
+        function updateQuizLockVisibility() {
+            const qBox = document.getElementById('quiz-box-wrapper');
+            const lBox = document.getElementById('quiz-locked-box');
+            if (userData.quizCount >= 6) {
+                qBox.classList.add('hidden');
+                lBox.classList.remove('hidden');
+                if(!hasShownAlertThisSession) {
+                    alert("⚠️ Batas Limit Tercapai! Anda telah menjawab sebanyak 6 kali hari ini. Kuis dikunci dan akan terbuka kembali pukul 00.00 malam.");
+                    hasShownAlertThisSession = true;
+                }
+            } else {
+                qBox.classList.remove('hidden');
+                lBox.classList.add('hidden');
+            }
+        }
+
+        function checkSavedCredentialsPopup() {
+            if (autoSaveCredentials && localStorage.getItem('saved_uid')) {
+                let savedUid = localStorage.getItem('saved_uid');
+                toggleAuth(false);
+                document.getElementById('sheet-title').innerText = "Masuk Otomatis Detect! 🚀";
+                document.getElementById('sheet-desc').innerText = `Akun terdeteksi tersimpan di browser ini. Klik untuk langsung bypass login.`;
+                document.getElementById('sheet-action-box').innerHTML = `
+                    <button id="btn-quick-login" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider cursor-pointer">Isi Otomatis & Login ⚡</button>
+                    <button id="btn-close-sheet" class="w-full bg-slate-900 text-slate-400 py-2.5 rounded-xl text-xs font-semibold cursor-pointer">Gunakan Akun Lain</button>
+                `;
+                openBottomSheet();
+                document.getElementById('btn-quick-login').onclick = () => {
+                    currentUid = savedUid;
+                    localStorage.setItem('logged_uid', savedUid);
+                    closeBottomSheet();
+                    listenToUserData(savedUid);
+                };
+                document.getElementById('btn-close-sheet').onclick = () => closeBottomSheet();
+            }
+        }
+
+        function openBottomSheet() {
+            sheetBackdrop.classList.remove('pointer-events-none', 'opacity-0');
+            sheetBackdrop.classList.add('opacity-100');
+            sheetContent.classList.add('show');
+        }
+
+        function closeBottomSheet() {
+            sheetBackdrop.classList.remove('opacity-100');
+            sheetBackdrop.classList.add('opacity-0', 'pointer-events-none');
+            sheetContent.classList.remove('show');
+        }
+
+        window.toggleAuth = function(showRegister) {
+            if (showRegister) {
+                document.getElementById('card-register').classList.remove('hidden');
+                document.getElementById('card-login').classList.add('hidden');
+                generateCaptcha('reg');
+            } else {
+                document.getElementById('card-register').classList.add('hidden');
+                document.getElementById('card-login').classList.remove('hidden');
+                generateCaptcha('login');
+            }
+        }
+
+        function generateCaptcha(type) {
+            let n1 = Math.floor(Math.random() * 8) + 2;
+            let n2 = Math.floor(Math.random() * 7) + 2;
+            if (type === 'reg') {
+                currentRegCaptcha = n1 + n2;
+                document.getElementById('reg-captcha-text').innerText = `${n1} + ${n2}`;
+            } else {
+                currentLoginCaptcha = n1 * n2;
+                document.getElementById('login-captcha-text').innerText = `${n1} × ${n2}`;
+            }
+        }
+
+        window.handleRegister = function(e) {
+            e.preventDefault();
+            let username = document.getElementById('reg-username').value.trim();
+            let email = document.getElementById('reg-email').value.trim();
+            let p1 = document.getElementById('reg-pass1').value;
+            let p2 = document.getElementById('reg-pass2').value;
+            let captcha = parseInt(document.getElementById('reg-captcha-ans').value);
+
+            if (p1 !== p2) return alert("Password 1 & 2 tidak sama! ❌");
+            if (captcha !== currentRegCaptcha) {
+                alert("Proteksi matematika salah! ❌");
+                return generateCaptcha('reg');
+            }
+
+            let uid = btoa(username).replace(/=/g, ""); 
+            get(child(ref(db), `users/${uid}`)).then((snapshot) => {
+                if (snapshot.exists()) {
+                    alert("Username sudah terdaftar! Gunakan yang lain. ❌");
+                } else {
+                    let newUser = {
+                        uid: uid, username: username, email: email, password: p1,
+                        saldo: 0, isFirstLevel: true, quizCount: 0, lastQuizDate: new Date().toDateString()
+                    };
+                    set(ref(db, 'users/' + uid), newUser).then(() => {
+                        alert("Pendaftaran Berhasil! Silakan Login menggunakan Username Anda. ✅");
+                        document.getElementById('form-register').reset();
+                        toggleAuth(false);
+                        document.getElementById('login-user').value = username;
+                    });
+                }
+            });
+        }
+
+        window.handleLogin = function(e) {
+            if (e) e.preventDefault();
+            let uInput = document.getElementById('login-user').value.trim();
+            let pInput = document.getElementById('login-pass').value;
+            let captcha = parseInt(document.getElementById('login-captcha-ans').value);
+
+            if (captcha !== currentLoginCaptcha) {
+                alert("Proteksi matematika login salah! ❌");
+                return generateCaptcha('login');
+            }
+
+            // Memeriksa format uid berbasis Username
+            let uid = btoa(uInput).replace(/=/g, "");
+            get(child(ref(db), `users/${uid}`)).then((snapshot) => {
+                if (snapshot.exists() && snapshot.val().password === pInput) {
+                    currentUid = uid;
+                    localStorage.setItem('logged_uid', uid);
+                    listenToUserData(uid);
+                } else {
+                    // Fallback alternatif: Mencari berdasarkan pencocokan email jika input yang dimasukkan adalah email
+                    get(ref(db, 'users')).then((allUsersSnapshot) => {
+                        let userFound = false;
+                        allUsersSnapshot.forEach((childSnapshot) => {
+                            let user = childSnapshot.val();
+                            if ((user.email === uInput || user.username === uInput) && user.password === pInput) {
+                                userFound = true;
+                                currentUid = user.uid;
+                                localStorage.setItem('logged_uid', user.uid);
+                                listenToUserData(user.uid);
+                            }
+                        });
+                        if (!userFound) {
+                            alert("Kredensial salah! Pastikan Username/Email dan Password Anda benar. ❌");
+                            generateCaptcha('login');
+                        }
+                    });
+                }
+            });
+        }
+
+        function enterDashboard() {
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = userData.username;
+            
+            displaySaldo.innerText = `Rp ${userData.saldo.toLocaleString('id-ID')}`;
+            renderHistory();
+            checkResetLimitDay();
+            generateQuestion();
+        }
+
+        window.triggerLogout = function() {
+            document.getElementById('sheet-title').innerText = "Fitur Save Data Akun 💾";
+            document.getElementById('sheet-desc').innerText = "Ingin menyimpan password di perangkat ini agar ketika kembali tidak perlu mengetik form log lagi?";
+            document.getElementById('sheet-action-box').innerHTML = `
+                <button id="btn-save-logout" class="w-full bg-purple-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider cursor-pointer">Ya, Simpan & Log Out</button>
+                <button id="btn-clear-logout" class="w-full bg-rose-500/10 text-rose-400 font-semibold py-2.5 rounded-xl text-xs cursor-pointer">Hapus Sesi & Log Out</button>
+            `;
+            openBottomSheet();
+            document.getElementById('btn-save-logout').onclick = () => {
+                localStorage.setItem('saved_credentials', true);
+                localStorage.setItem('saved_uid', currentUid);
+                localStorage.removeItem('logged_uid');
+                location.reload();
+            };
+            document.getElementById('btn-clear-logout').onclick = () => {
+                localStorage.removeItem('saved_credentials');
+                localStorage.removeItem('saved_uid');
+                localStorage.removeItem('logged_uid');
+                location.reload();
+            };
+        }
+
+        wdAmountInput.addEventListener('input', () => {
+            let v = parseInt(wdAmountInput.value) || 0;
+            let n = v - 1000;
+            wdNetAmount.innerText = `Rp ${n < 0 ? 0 : n.toLocaleString('id-ID')}`;
+        });
+
+        function generateQuestion() {
+            answerInput.value = "";
+            if (userData.isFirstLevel) {
+                let n1 = Math.floor(Math.random() * 8) + 2;
+                let n2 = Math.floor(Math.random() * 7) + 2;
+                currentAnswer = n1 + n2;
+                mathQuestion.innerText = `${n1} + ${n2} = ?`;
+                rewardInfo.innerText = "Hadiah: Rp 1,000";
+                gameLevelTag.innerText = "Level 1: Saldo Pertama (Mudah)";
+                gameLevelTag.className = "px-2.5 py-1 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/20";
+            } else {
+                let n1 = Math.floor(Math.random() * 60) + 30;
+                let n2 = Math.floor(Math.random() * 25) + 10;
+                let n3 = Math.floor(Math.random() * 9) + 2;
+                currentAnswer = (n1 * n2) - n3;
+                mathQuestion.innerText = `(${n1} × ${n2}) - ${n3} = ?`;
+                rewardInfo.innerText = "Hadiah: Rp 1,000 + Bonus Rp 500";
+                gameLevelTag.innerText = "Level Hard Core (Sangat Sulit)";
+                gameLevelTag.className = "px-2.5 py-1 rounded-full text-[9px] font-bold bg-pink-500/20 text-pink-300 border border-pink-500/20";
+            }
+        }
+
+        window.checkAnswer = function() {
+            if (userData.quizCount >= 6) return updateQuizLockVisibility();
+
+            let uAns = parseInt(answerInput.value);
+            if (isNaN(uAns)) return alert("Isi jawaban dulu!");
+
+            let nextQuizCount = userData.quizCount + 1;
+
+            if (uAns === currentAnswer) {
+                let profit = userData.isFirstLevel ? 1000 : 1500;
+                alert("Benar ✅");
+                showFeedback(true, `Benar ✅ +Rp ${profit.toLocaleString('id-ID')}`);
+                update(ref(db, 'users/' + currentUid), {
+                    saldo: userData.saldo + profit,
+                    isFirstLevel: false,
+                    quizCount: nextQuizCount
+                });
+            } else {
+                alert("Salah ❌");
+                showFeedback(false, "Salah ❌ Mengganti rumus berikutnya!");
+                update(ref(db, 'users/' + currentUid), { quizCount: nextQuizCount });
+            }
+        }
+
+        function showFeedback(isCorrect, m) {
+            feedbackBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20', 'bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            feedbackBox.classList.add('border', isCorrect ? 'bg-emerald-500/10' : 'bg-rose-500/10', isCorrect ? 'text-emerald-400' : 'text-rose-400', isCorrect ? 'border-emerald-500/20' : 'border-rose-500/20');
+            feedbackBox.innerText = m;
+            feedbackBox.classList.remove('hidden');
+            setTimeout(() => feedbackBox.classList.add('hidden'), 3000);
+        }
+
+        window.switchTab = function(tPane, btn) {
+            document.querySelectorAll('.menu-pane').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`pane-${tPane}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.className = "nav-btn flex flex-col items-center text-slate-500 cursor-pointer");
+            btn.className = "nav-btn flex flex-col items-center text-purple-400 font-bold cursor-pointer";
+        }
+
+        window.selectWallet = function(method) {
+            selectedWalletMethod = method;
+            document.querySelectorAll('.wallet-btn').forEach(b => b.className = "wallet-btn border border-slate-800 bg-slate-950/40 py-2 rounded-lg font-bold text-xs cursor-pointer");
+            event.target.className = "wallet-btn border border-emerald-500 bg-emerald-500/10 text-emerald-400 py-2 rounded-lg font-bold text-xs cursor-pointer";
+        }
+
+        window.processWithdraw = function() {
+            let num = document.getElementById('wd-number').value.trim();
+            let amt = parseInt(wdAmountInput.value) || 0;
+
+            if (!selectedWalletMethod || !num) return alert("Pilih E-Wallet & Isi Nomor HP! ❌");
+            if (amt < 5000) return alert("Minimal withdraw Rp 5,000! ❌");
+            if (userData.saldo < amt) return alert("Saldo kamu kurang! ❌");
+
+            let wdId = "WD-" + Date.now();
+            let d = new Date();
+            let timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+
+            let transObj = { 
+                id: wdId, uid: currentUid, wallet: selectedWalletMethod, 
+                account: num, gross: amt, net: amt - 1000, 
+                time: timeStr, user: userData.username, status: "Pending" 
+            };
+            
+            update(ref(db, 'users/' + currentUid), { saldo: userData.saldo - amt });
+            set(ref(db, 'withdraws/' + wdId), transObj).then(() => {
+                alert(`Withdraw Diajukan! ⏳\nStatus: PENDING\nMenunggu konfirmasi panel Owner.`);
+                document.getElementById('wd-number').value = "";
+            });
+        }
+
+        function renderHistory() {
+            onValue(ref(db, 'withdraws'), (snapshot) => {
+                historyList.innerHTML = "";
+                let hasData = false;
+                snapshot.forEach((childSnapshot) => {
+                    let item = childSnapshot.val();
+                    if (item.uid === currentUid) {
+                        hasData = true;
+                        let badgeColor = item.status === "Pending" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : (item.status === "Success" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border-rose-500/20");
+                        let d = document.createElement('div');
+                        d.className = "flex justify-between items-center bg-slate-950/50 border border-slate-900 p-3 rounded-xl";
+                        d.innerHTML = `
+                            <div>
+                                <p class="text-xs font-bold">${item.wallet} • <span class="text-slate-400 font-normal">${item.account}</span></p>
+                                <p class="text-[9px] text-slate-500">Jam ${item.time} • Admin Rp 1,000</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-black text-rose-400">-Rp ${item.gross.toLocaleString('id-ID')}</p>
+                                <span class="text-[8px] px-1.5 py-0.2 rounded border ${badgeColor}">${item.status}</span>
+                            </div>`;
+                        historyList.appendChild(d);
+                    }
+                });
+                if(!hasData) {
+                    historyList.innerHTML = `<div class="text-center text-slate-600 my-auto text-xs"><i class="fas fa-history text-2xl mb-1.5 block"></i>Belum ada data penarikan.</div>`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
