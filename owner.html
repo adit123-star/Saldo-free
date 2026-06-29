@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>owner</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #02040a 0%, #0c101f 100%);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <h1 class="text-3xl font-black text-white tracking-tight">OWNER <span class="text-purple-400"></span></h1>
+                <p class="text-slate-400 text-sm mt-1">Audit terpusat pendaftaran pengguna, pemantauan transaksi penarikan dana pending.</p>
+            </div>
+            <button onclick="refreshOwnerPanel()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg flex items-center gap-2 transition">
+                <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="glass p-5 rounded-2xl border-l-4 border-l-purple-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Pendaftaran Akun</p>
+                <h2 class="text-3xl font-extrabold text-white mt-1" id="m-total-reg">0 Anggota</h2>
+            </div>
+            <div class="glass p-5 rounded-2xl border-l-4 border-l-amber-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Penarikan Pending</p>
+                <h2 class="text-3xl font-extrabold text-white mt-1" id="m-total-pending">0 Transaksi</h2>
+            </div>
+            <div class="glass p-5 rounded-2xl border-l-4 border-l-green-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Penarikan Sukses</p>
+                <h2 class="text-3xl font-extrabold text-white mt-1" id="m-total-success">Rp 0</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="glass p-6 rounded-2xl lg:col-span-2 space-y-4">
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-users text-purple-400"></i> Detail Data Pengguna Terdaftar</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                                <th class="py-3 px-4">Kredensial User</th>
+                                <th class="py-3 px-4">Total Saldo</th>
+                                <th class="py-3 px-4">Statistik Jawaban</th>
+                                <th class="py-3 px-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="owner-table-users" class="divide-y divide-slate-900 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass p-6 rounded-2xl space-y-4">
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wallet text-amber-400"></i> Antrean Penarikan (Pending)</h3>
+                <div id="owner-wd-queue-container" class="space-y-3 overflow-y-auto max-h-[500px]"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            refreshOwnerPanel();
+        }
+
+        function refreshOwnerPanel() {
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            const withdrawals = JSON.parse(localStorage.getItem('withdrawals')) || [];
+
+            document.getElementById('m-total-reg').innerText = `${Object.keys(users).length} User`;
+            
+            let totalPending = withdrawals.filter(w => w.status === 'pending').length;
+            document.getElementById('m-total-pending').innerText = `${totalPending} Antrean`;
+
+            let totalVolumeSuccess = withdrawals.filter(w => w.status === 'success').reduce((sum, curr) => sum + curr.amount, 0);
+            document.getElementById('m-total-success').innerText = `Rp ${totalVolumeSuccess.toLocaleString('id-ID')}`;
+
+            const userTable = document.getElementById('owner-table-users');
+            userTable.innerHTML = "";
+
+            if(Object.keys(users).length === 0) {
+                userTable.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500 italic">Belum ada user terdaftar.</td></tr>`;
+            } else {
+                Object.values(users).forEach(u => {
+                    userTable.innerHTML += `
+                        <tr class="hover:bg-slate-900/40 transition">
+                            <td class="py-3 px-4">
+                                <div class="font-bold text-white">${u.username}</div>
+                                <div class="text-[10px] text-slate-500 font-mono mt-0.5">${u.email}</div>
+                            </td>
+                            <td class="py-3 px-4 font-bold text-emerald-400">Rp ${u.saldo.toLocaleString('id-ID')}</td>
+                            <td class="py-3 px-4 text-slate-300">${u.totalBenar} Benar / ${u.attempts} Main</td>
+                            <td class="py-3 px-4 text-center">
+                                <button onclick="hapusAkunUser('${u.username}')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-2 py-1 rounded-lg font-bold text-[10px] transition">
+                                    Hapus Akun
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const wdContainer = document.getElementById('owner-wd-queue-container');
+            wdContainer.innerHTML = "";
+            let pendingWds = withdrawals.filter(w => w.status === 'pending');
+
+            if(pendingWds.length === 0) {
+                wdContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-10 italic">Tidak ada pengajuan pencairan dana yang tertunda.</p>`;
+            } else {
+                pendingWds.forEach((w) => {
+                    wdContainer.innerHTML += `
+                        <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-xl space-y-2">
+                            <div class="flex justify-between items-start border-b border-slate-900 pb-2">
+                                <div>
+                                    <h4 class="font-bold text-white text-xs">${w.username}</h4>
+                                    <p class="text-[9px] text-slate-500 font-mono mt-0.5">${w.wdId}</p>
+                                </div>
+                                <span class="text-[9px] bg-purple-500/10 font-bold text-purple-400 px-2 py-0.5 rounded font-mono">${w.wallet}</span>
+                            </div>
+
+                            <div class="text-[11px] space-y-1 text-slate-300">
+                                <p><span class="text-slate-500">No.Tujuan:</span> <span class="text-white font-mono">${w.target}</span></p>
+                                <p><span class="text-slate-500">Saldo Cair:</span> <b class="text-green-400">Rp ${w.amount.toLocaleString('id-ID')}</b></p>
+                                <p><span class="text-slate-500">Potongan Admin:</span> <b class="text-red-400">Rp ${w.fee.toLocaleString('id-ID')}</b></p>
+                            </div>
+
+                            <div class="flex gap-2 pt-1">
+                                <button onclick="konfirmasiWD('${w.wdId}', 'success')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 rounded-lg transition">Terima </button>
+                                <button onclick="konfirmasiWD('${w.wdId}', 'rejected')" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 rounded-lg transition">Tolak </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function hapusAkunUser(username) {
+            if(!confirm(`Hapus permanen akun "${username}"? Sesi user tersebut otomatis diputus keluar.`)) return;
+
+            let users = JSON.parse(localStorage.getItem('users'));
+            delete users[username];
+            localStorage.setItem('users', JSON.stringify(users));
+
+            const activeSession = localStorage.getItem('currentSession');
+            if(activeSession === username) {
+                localStorage.removeItem('currentSession');
+            }
+
+            refreshOwnerPanel();
+            alert(`Akun "${username}" sukses dieliminasi dari sistem.`);
+        }
+
+        function konfirmasiWD(wdId, statusHasil) {
+            let withdrawals = JSON.parse(localStorage.getItem('withdrawals')) || [];
+            let realIdx = withdrawals.findIndex(w => w.wdId === wdId);
+
+            if(realIdx === -1) return alert("Transaksi tidak valid!");
+
+            if(statusHasil === 'success') {
+                withdrawals[realIdx].status = 'success';
+                alert("Dana dicairkan! Status transaksi sukses di sisi user.");
+            } else {
+                withdrawals[realIdx].status = 'rejected';
+                
+                let users = JSON.parse(localStorage.getItem('users'));
+                let targetUser = withdrawals[realIdx].username;
+                
+                if(users[targetUser]) {
+                    const returnCost = withdrawals[realIdx].amount + withdrawals[realIdx].fee;
+                    users[targetUser].saldo += returnCost;
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+                alert("Penarikan ditolak. Dana direfund utuh ke saldo akun user.");
+            }
+
+            localStorage.setItem('withdrawals', JSON.stringify(withdrawals));
+            refreshOwnerPanel();
+        }
+    </script>
+</body>
+</html>
